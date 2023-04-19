@@ -6,8 +6,18 @@ import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 
+import { MatDialog } from '@angular/material/dialog';
+
 import { IUser } from '../../services/users/users.interface';
 import { UsersService } from '../../services/users/users.service';
+
+/** Dialogs */
+import { TableColumnsDialog } from '../../dialogs/table-columns/table-columns.dialog';
+
+export interface TableColumnsConfig {
+  title: keyof IUser;
+  isActive: boolean;
+}
 
 @Component({
   selector: 'app-user-table',
@@ -20,8 +30,7 @@ export class UserTableComponent implements OnInit, OnDestroy {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  dataSource: MatTableDataSource<IUser> = new MatTableDataSource();
-  displayedColumns: Array<keyof IUser> = [
+  private _defaultColumns: Array<keyof IUser> = [
     'id',
     'userName',
     'email',
@@ -30,7 +39,10 @@ export class UserTableComponent implements OnInit, OnDestroy {
     'userRoles',
   ];
 
-  constructor(private userService: UsersService) {}
+  dataSource: MatTableDataSource<IUser> = new MatTableDataSource();
+  displayedColumns: Array<keyof IUser> = [...this._defaultColumns];
+
+  constructor(public dialog: MatDialog, private userService: UsersService) {}
 
   ngOnInit(): void {
     this._subscription.add(
@@ -45,5 +57,28 @@ export class UserTableComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this._subscription.unsubscribe();
+  }
+
+  openTableColumnsDialog(): void {
+    const tableColumnsConfig: TableColumnsConfig[] = this._defaultColumns.map(
+      (value) => {
+        return {
+          title: value,
+          isActive: this.displayedColumns.includes(value),
+        };
+      }
+    );
+
+    const dialogRef = this.dialog.open(TableColumnsDialog, {
+      data: tableColumnsConfig,
+    });
+
+    this._subscription.add(
+      dialogRef.afterClosed().subscribe((displayedColumns) => {
+        if (!displayedColumns) return;
+
+        this.displayedColumns = displayedColumns as Array<keyof IUser>;
+      })
+    );
   }
 }
