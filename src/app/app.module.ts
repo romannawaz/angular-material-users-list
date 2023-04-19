@@ -8,6 +8,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { UserTableComponent } from './components/user-table/user-table.component';
 import { TableColumnsDialog } from './dialogs/table-columns/table-columns.dialog';
+import { ConfirmDialog } from './dialogs/confirm/confirm.dialog';
 
 /** Material */
 import { MatTableModule } from '@angular/material/table';
@@ -31,7 +32,7 @@ const Material = [
 ];
 
 @NgModule({
-  declarations: [AppComponent, UserTableComponent, TableColumnsDialog],
+  declarations: [AppComponent, UserTableComponent, TableColumnsDialog, ConfirmDialog],
   imports: [
     BrowserModule,
     HttpClientModule,

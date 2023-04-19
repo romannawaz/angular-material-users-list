@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormControl } from '@angular/forms';
 
-import { Subscription } from 'rxjs';
+import { EMPTY, Subscription, switchMap } from 'rxjs';
 
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
@@ -14,11 +14,14 @@ import { UsersService } from '../../services/users/users.service';
 
 /** Dialogs */
 import { TableColumnsDialog } from '../../dialogs/table-columns/table-columns.dialog';
+import { ConfirmDialog } from '../../dialogs/confirm/confirm.dialog';
 
 export interface TableColumnsConfig {
-  title: keyof IUser;
+  title: Columm;
   isActive: boolean;
 }
+
+export type Columm = keyof IUser | 'delete';
 
 @Component({
   selector: 'app-user-table',
@@ -31,17 +34,18 @@ export class UserTableComponent implements OnInit, OnDestroy {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  private _defaultColumns: Array<keyof IUser> = [
+  private _defaultColumns: Columm[] = [
     'id',
     'userName',
     'email',
     'givenName',
     'familyName',
     'userRoles',
+    'delete',
   ];
 
   dataSource: MatTableDataSource<IUser> = new MatTableDataSource();
-  displayedColumns: Array<keyof IUser> = [...this._defaultColumns];
+  displayedColumns: Columm[] = [...this._defaultColumns];
 
   userNameFilter = new FormControl('');
   userRoleFilter = new FormControl('');
@@ -49,6 +53,14 @@ export class UserTableComponent implements OnInit, OnDestroy {
   constructor(public dialog: MatDialog, private userService: UsersService) {}
 
   ngOnInit(): void {
+    this.updateUsers();
+  }
+
+  ngOnDestroy(): void {
+    this._subscription.unsubscribe();
+  }
+
+  updateUsers(): void {
     this._subscription.add(
       this.userService.getUsers().subscribe((users) => {
         this.dataSource = new MatTableDataSource(users);
@@ -59,29 +71,23 @@ export class UserTableComponent implements OnInit, OnDestroy {
     );
   }
 
-  ngOnDestroy(): void {
-    this._subscription.unsubscribe();
-  }
-
   openTableColumnsDialog(): void {
-    const tableColumnsConfig: TableColumnsConfig[] = this._defaultColumns.map(
-      (value) => {
-        return {
-          title: value,
-          isActive: this.displayedColumns.includes(value),
-        };
-      }
-    );
+    const tableColumnsConfig = this._defaultColumns.map((value) => {
+      return {
+        title: value,
+        isActive: this.displayedColumns.includes(value),
+      };
+    });
 
     const dialogRef = this.dialog.open(TableColumnsDialog, {
       data: tableColumnsConfig,
     });
 
     this._subscription.add(
-      dialogRef.afterClosed().subscribe((displayedColumns) => {
+      dialogRef.afterClosed().subscribe((displayedColumns: Columm[]) => {
         if (!displayedColumns) return;
 
-        this.displayedColumns = displayedColumns as Array<keyof IUser>;
+        this.displayedColumns = displayedColumns;
       })
     );
   }
@@ -111,5 +117,24 @@ export class UserTableComponent implements OnInit, OnDestroy {
     if (this.dataSource.paginator) {
       this.dataSource.paginator.firstPage();
     }
+  }
+
+  deleteUser(id: string): void {
+    const dialogRef = this.dialog.open(ConfirmDialog);
+
+    this._subscription.add(
+      dialogRef
+        .afterClosed()
+        .pipe(
+          switchMap((isConfirmed) => {
+            if (isConfirmed) {
+              return this.userService.deleteUser(id);
+            }
+
+            return EMPTY;
+          })
+        )
+        .subscribe(() => this.updateUsers())
+    );
   }
 }
