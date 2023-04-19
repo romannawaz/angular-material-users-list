@@ -1,0 +1,14 @@
+.filter {
+  width: 100%;
+
+  display: flex;
+  gap: 20px;
+
+  > .main {
+    width: 80%;
+  }
+
+  > .second {
+    width: 20%;
+  }
+}

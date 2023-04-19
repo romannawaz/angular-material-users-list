@@ -16,6 +16,8 @@ import { MatSortModule } from '@angular/material/sort';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 
 const Material = [
   MatTableModule,
@@ -24,6 +26,8 @@ const Material = [
   MatDialogModule,
   MatCheckboxModule,
   MatButtonModule,
+  MatFormFieldModule,
+  MatInputModule,
 ];
 
 @NgModule({

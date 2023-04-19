@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { FormControl } from '@angular/forms';
 
 import { Subscription } from 'rxjs';
 
@@ -42,6 +43,9 @@ export class UserTableComponent implements OnInit, OnDestroy {
   dataSource: MatTableDataSource<IUser> = new MatTableDataSource();
   displayedColumns: Array<keyof IUser> = [...this._defaultColumns];
 
+  userNameFilter = new FormControl('');
+  userRoleFilter = new FormControl('');
+
   constructor(public dialog: MatDialog, private userService: UsersService) {}
 
   ngOnInit(): void {
@@ -80,5 +84,32 @@ export class UserTableComponent implements OnInit, OnDestroy {
         this.displayedColumns = displayedColumns as Array<keyof IUser>;
       })
     );
+  }
+
+  applyFilter(event: Event): void {
+    const filterValue = (event.target as HTMLInputElement).value;
+
+    const userNameFilter = this.userNameFilter.value?.toLowerCase().trim();
+    const userRoleFilter = this.userRoleFilter.value?.toLowerCase().trim();
+
+    this.dataSource.filterPredicate = function (data): boolean {
+      return (
+        (data.userName.toLowerCase().includes(userNameFilter ?? '') ||
+          data.email.toLowerCase().includes(userNameFilter ?? '')) &&
+        data.userRoles
+          .join(' ')
+          .toLocaleLowerCase()
+          .includes(userRoleFilter ?? '')
+      );
+    };
+
+    /**
+     * TODO: trigger filter in other way
+     */
+    this.dataSource.filter = filterValue.trim().toLowerCase();
+
+    if (this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
+    }
   }
 }
