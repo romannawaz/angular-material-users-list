@@ -15,13 +15,14 @@ import { UsersService } from '../../services/users/users.service';
 /** Dialogs */
 import { TableColumnsDialog } from '../../dialogs/table-columns/table-columns.dialog';
 import { ConfirmDialog } from '../../dialogs/confirm/confirm.dialog';
+import { EditUserDialog } from '../../dialogs/edit-user/edit-user.dialog';
 
 export interface TableColumnsConfig {
   title: Columm;
   isActive: boolean;
 }
 
-export type Columm = keyof IUser | 'delete';
+export type Columm = keyof IUser | 'edit' | 'delete';
 
 @Component({
   selector: 'app-user-table',
@@ -41,6 +42,7 @@ export class UserTableComponent implements OnInit, OnDestroy {
     'givenName',
     'familyName',
     'userRoles',
+    'edit',
     'delete',
   ];
 
@@ -117,6 +119,23 @@ export class UserTableComponent implements OnInit, OnDestroy {
     if (this.dataSource.paginator) {
       this.dataSource.paginator.firstPage();
     }
+  }
+
+  editUser(user: IUser): void {
+    const dialogRef = this.dialog.open(EditUserDialog, { data: user });
+
+    dialogRef
+      .afterClosed()
+      .pipe(
+        switchMap((user: IUser) => {
+          if (user) {
+            return this.userService.editUser(user);
+          }
+
+          return EMPTY;
+        })
+      )
+      .subscribe(() => this.updateUsers());
   }
 
   deleteUser(id: string): void {

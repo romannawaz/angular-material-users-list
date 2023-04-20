@@ -53,6 +53,15 @@
     </td>
   </ng-container>
 
+  <ng-container matColumnDef="edit">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header>Edit</th>
+    <td mat-cell *matCellDef="let element">
+      <button mat-button color="accent" (click)="editUser(element)">
+        Edit
+      </button>
+    </td>
+  </ng-container>
+
   <ng-container matColumnDef="delete">
     <th mat-header-cell *matHeaderCellDef mat-sort-header>Delete</th>
     <td mat-cell *matCellDef="let element">

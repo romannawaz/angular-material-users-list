@@ -1,0 +1,54 @@
+<h1 mat-dialog-title>Edit</h1>
+<div mat-dialog-content>
+  <form class="form" [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="form-content">
+      <div class="form-group">
+        <mat-form-field appearance="outline">
+          <mat-label>User name</mat-label>
+          <input matInput type="text" formControlName="userName" />
+
+          <mat-error *ngIf="form.controls['userName'].invalid">
+            User name is required!
+          </mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Email</mat-label>
+          <input matInput type="text" formControlName="email" />
+
+          <mat-error *ngIf="form.controls['email'].invalid">
+            Email is required!
+          </mat-error>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Given name</mat-label>
+          <input matInput type="text" formControlName="givenName" />
+        </mat-form-field>
+      </div>
+      <div class="form-group">
+        <mat-form-field appearance="outline">
+          <mat-label>Family name</mat-label>
+          <input matInput type="text" formControlName="familyName" />
+        </mat-form-field>
+
+        <section class="role-section" formGroupName="role">
+          <h2 class="role-h2">Select a role</h2>
+
+          <mat-checkbox class="role-margin" [formControlName]="UserRole.User">
+            {{ UserRole.User }}
+          </mat-checkbox>
+          <mat-checkbox
+            class="role-margin"
+            [formControlName]="UserRole.Manager"
+          >
+            {{ UserRole.Manager }}
+          </mat-checkbox>
+          <mat-checkbox class="role-margin" [formControlName]="UserRole.Admin">
+            {{ UserRole.Admin }}
+          </mat-checkbox>
+        </section>
+      </div>
+    </div>
+
+    <button mat-button type="submit" style="width: 100%">Confirm</button>
+  </form>
+</div>
