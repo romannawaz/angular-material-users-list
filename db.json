@@ -1,0 +1,62 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "userName": "Dima7",
+      "email": "dmytro1921@gmail.com",
+      "userRoles": [
+        "User",
+        "Admin"
+      ],
+      "givenName": "Dima567",
+      "familyName": ""
+    },
+    {
+      "id": "2",
+      "userName": "Danylo5",
+      "email": "danylo2001@gmail.com",
+      "userRoles": [
+        "User"
+      ]
+    },
+    {
+      "id": "3",
+      "userName": "Antony",
+      "email": "anton33@gmail.com",
+      "userRoles": [
+        "Manager"
+      ]
+    },
+    {
+      "id": "4",
+      "userName": "Yura",
+      "email": "yuriy99@gmail.com",
+      "givenName": "Yuriy",
+      "familyName": "Yur",
+      "userRoles": [
+        "Admin",
+        "Manager"
+      ]
+    },
+    {
+      "id": "5",
+      "userName": "Yuriiiiiy",
+      "email": "yuriy99@gmail.com",
+      "userRoles": [
+        "Manager"
+      ],
+      "givenName": "",
+      "familyName": ""
+    },
+    {
+      "id": "6",
+      "userName": "Arthur",
+      "email": "arthur@gmail.com",
+      "givenName": "Arthur132",
+      "userRoles": [
+        "Manager",
+        "User"
+      ]
+    }
+  ]
+}
