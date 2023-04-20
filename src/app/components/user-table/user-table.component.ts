@@ -1,5 +1,10 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { FormControl } from '@angular/forms';
+import {
+  FormBuilder,
+  FormControl,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 
 import { EMPTY, Subscription, switchMap } from 'rxjs';
 
@@ -9,7 +14,7 @@ import { MatTableDataSource } from '@angular/material/table';
 
 import { MatDialog } from '@angular/material/dialog';
 
-import { IUser } from '../../services/users/users.interface';
+import { IUser, UserRole } from '../../services/users/users.interface';
 import { UsersService } from '../../services/users/users.service';
 
 /** Dialogs */
@@ -35,6 +40,15 @@ export class UserTableComponent implements OnInit, OnDestroy {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
+  UserRole = UserRole;
+
+  inlineEdit = true;
+  isEdited = false;
+  editedUser: IUser | null = null;
+
+  userNameInput!: FormControl;
+  userRolesInput!: FormGroup;
+
   private _defaultColumns: Columm[] = [
     'id',
     'userName',
@@ -52,7 +66,11 @@ export class UserTableComponent implements OnInit, OnDestroy {
   userNameFilter = new FormControl('');
   userRoleFilter = new FormControl('');
 
-  constructor(public dialog: MatDialog, private userService: UsersService) {}
+  constructor(
+    public dialog: MatDialog,
+    private userService: UsersService,
+    private formBuilder: FormBuilder
+  ) {}
 
   ngOnInit(): void {
     this.updateUsers();
@@ -121,21 +139,57 @@ export class UserTableComponent implements OnInit, OnDestroy {
     }
   }
 
+  saveUser(): void {
+    if (!this.editedUser) return;
+
+    const newUser = this.editedUser;
+    newUser.userName = this.userNameInput.value;
+
+    const rolesControl = this.userRolesInput.value;
+    const roles: UserRole[] = [];
+    for (let role in rolesControl)
+      if (rolesControl[role]) roles.push(role as UserRole);
+
+    newUser.userRoles = [...roles];
+
+    this._subscription.add(
+      this.userService.editUser(newUser).subscribe(() => {
+        this.isEdited = false;
+        this.editedUser = null;
+
+        this.updateUsers();
+      })
+    );
+  }
+
   editUser(user: IUser): void {
-    const dialogRef = this.dialog.open(EditUserDialog, { data: user });
+    if (this.inlineEdit) {
+      this.isEdited = true;
+      this.editedUser = user;
 
-    dialogRef
-      .afterClosed()
-      .pipe(
-        switchMap((user: IUser) => {
-          if (user) {
-            return this.userService.editUser(user);
-          }
+      this.userNameInput = this.formBuilder.control(
+        user.userName,
+        Validators.required
+      );
+      this.userRolesInput = this._createUserRoleForm(user);
+    } else {
+      const dialogRef = this.dialog.open(EditUserDialog, { data: user });
 
-          return EMPTY;
-        })
-      )
-      .subscribe(() => this.updateUsers());
+      this._subscription.add(
+        dialogRef
+          .afterClosed()
+          .pipe(
+            switchMap((user: IUser) => {
+              if (user) {
+                return this.userService.editUser(user);
+              }
+
+              return EMPTY;
+            })
+          )
+          .subscribe(() => this.updateUsers())
+      );
+    }
   }
 
   deleteUser(id: string): void {
@@ -155,5 +209,13 @@ export class UserTableComponent implements OnInit, OnDestroy {
         )
         .subscribe(() => this.updateUsers())
     );
+  }
+
+  private _createUserRoleForm(user: IUser): FormGroup {
+    return this.formBuilder.group({
+      [UserRole.User]: user.userRoles.includes(UserRole.User),
+      [UserRole.Manager]: user.userRoles.includes(UserRole.Manager),
+      [UserRole.Admin]: user.userRoles.includes(UserRole.Admin),
+    });
   }
 }

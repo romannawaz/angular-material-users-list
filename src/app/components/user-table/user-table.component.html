@@ -1,5 +1,7 @@
 <button mat-button (click)="openTableColumnsDialog()">Columns</button>
 
+<mat-slide-toggle [(ngModel)]="inlineEdit">Inline edit</mat-slide-toggle>
+
 <div class="filter">
   <mat-form-field class="main">
     <mat-label>Filter by user name or email</mat-label>
@@ -23,49 +25,84 @@
 <table mat-table [dataSource]="dataSource" matSort>
   <ng-container matColumnDef="id">
     <th mat-header-cell *matHeaderCellDef mat-sort-header>ID</th>
-    <td mat-cell *matCellDef="let element">{{ element.id }}</td>
+    <td mat-cell *matCellDef="let user">{{ user.id }}</td>
   </ng-container>
 
   <ng-container matColumnDef="userName">
     <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
-    <td mat-cell *matCellDef="let element">{{ element.userName }}</td>
+    <td mat-cell *matCellDef="let user">
+      <mat-form-field
+        appearance="outline"
+        *ngIf="isEdited && editedUser?.id == user.id; else userName"
+      >
+        <mat-label>User name</mat-label>
+        <input matInput type="text" [formControl]="userNameInput" />
+      </mat-form-field>
+
+      <ng-template #userName>{{ user.userName }}</ng-template>
+    </td>
   </ng-container>
 
   <ng-container matColumnDef="email">
     <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
-    <td mat-cell *matCellDef="let element">{{ element.email }}</td>
+    <td mat-cell *matCellDef="let user">{{ user.email }}</td>
   </ng-container>
 
   <ng-container matColumnDef="givenName">
     <th mat-header-cell *matHeaderCellDef mat-sort-header>Given Name</th>
-    <td mat-cell *matCellDef="let element">{{ element.givenName }}</td>
+    <td mat-cell *matCellDef="let user">{{ user.givenName }}</td>
   </ng-container>
 
   <ng-container matColumnDef="familyName">
     <th mat-header-cell *matHeaderCellDef mat-sort-header>Family Name</th>
-    <td mat-cell *matCellDef="let element">{{ element.familyName }}</td>
+    <td mat-cell *matCellDef="let user">{{ user.familyName }}</td>
   </ng-container>
 
   <ng-container matColumnDef="userRoles">
     <th mat-header-cell *matHeaderCellDef mat-sort-header>Roles</th>
-    <td mat-cell *matCellDef="let element">
-      {{ element.userRoles.join(", ") }}
+    <td mat-cell *matCellDef="let user">
+      <div
+        *ngIf="isEdited && editedUser?.id == user.id; else userRoles"
+        [formGroup]="userRolesInput"
+      >
+        <mat-checkbox class="role-margin" [formControlName]="UserRole.User">
+          {{ UserRole.User }}
+        </mat-checkbox>
+        <mat-checkbox class="role-margin" [formControlName]="UserRole.Manager">
+          {{ UserRole.Manager }}
+        </mat-checkbox>
+        <mat-checkbox class="role-margin" [formControlName]="UserRole.Admin">
+          {{ UserRole.Admin }}
+        </mat-checkbox>
+      </div>
+
+      <ng-template #userRoles>{{ user.userRoles.join(", ") }}</ng-template>
     </td>
   </ng-container>
 
   <ng-container matColumnDef="edit">
     <th mat-header-cell *matHeaderCellDef mat-sort-header>Edit</th>
-    <td mat-cell *matCellDef="let element">
-      <button mat-button color="accent" (click)="editUser(element)">
-        Edit
-      </button>
+    <td mat-cell *matCellDef="let user">
+      <ng-container
+        *ngIf="isEdited && editedUser?.id == user.id; else editButton"
+      >
+        <button mat-button color="accent" (click)="saveUser()">Save</button>
+      </ng-container>
+      <ng-template #editButton>
+        <button mat-button color="accent" (click)="editUser(user)">Edit</button>
+      </ng-template>
     </td>
   </ng-container>
 
   <ng-container matColumnDef="delete">
     <th mat-header-cell *matHeaderCellDef mat-sort-header>Delete</th>
-    <td mat-cell *matCellDef="let element">
-      <button mat-button color="warn" (click)="deleteUser(element.id)">
+    <td mat-cell *matCellDef="let user">
+      <button
+        mat-button
+        color="warn"
+        (click)="deleteUser(user.id)"
+        *ngIf="!(isEdited && editedUser?.id == user.id)"
+      >
         Delete
       </button>
     </td>
