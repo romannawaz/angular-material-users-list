@@ -1,12 +1,24 @@
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  Inject,
+  OnDestroy,
+  OnInit,
+  QueryList,
+  ViewChild,
+  ViewChildren,
+  ViewEncapsulation,
+} from '@angular/core';
 import {
   FormBuilder,
   FormControl,
   FormGroup,
   Validators,
 } from '@angular/forms';
+import { DOCUMENT } from '@angular/common';
 
-import { EMPTY, Subscription, switchMap } from 'rxjs';
+import { EMPTY, Subscription, fromEvent, switchMap, takeUntil } from 'rxjs';
 
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
@@ -33,9 +45,13 @@ export type Columm = keyof IUser | 'edit' | 'delete';
   selector: 'app-user-table',
   templateUrl: './user-table.component.html',
   styleUrls: ['./user-table.component.scss'],
+  encapsulation: ViewEncapsulation.None,
 })
-export class UserTableComponent implements OnInit, OnDestroy {
+export class UserTableComponent implements OnInit, AfterViewInit, OnDestroy {
   private _subscription = new Subscription();
+
+  @ViewChildren('mat_header', { read: ElementRef })
+  headers!: QueryList<ElementRef>;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -69,11 +85,16 @@ export class UserTableComponent implements OnInit, OnDestroy {
   constructor(
     public dialog: MatDialog,
     private userService: UsersService,
-    private formBuilder: FormBuilder
+    private formBuilder: FormBuilder,
+    @Inject(DOCUMENT) private document: Document
   ) {}
 
   ngOnInit(): void {
     this.updateUsers();
+  }
+
+  ngAfterViewInit(): void {
+    this.headers.forEach((item) => this._move(item.nativeElement));
   }
 
   ngOnDestroy(): void {
@@ -217,5 +238,44 @@ export class UserTableComponent implements OnInit, OnDestroy {
       [UserRole.Manager]: user.userRoles.includes(UserRole.Manager),
       [UserRole.Admin]: user.userRoles.includes(UserRole.Admin),
     });
+  }
+
+  private _move(element: HTMLElement) {
+    const dragStart$ = fromEvent<MouseEvent>(element, 'mousedown');
+    const dragEnd$ = fromEvent<MouseEvent>(this.document, 'mouseup');
+    const drag$ = fromEvent<MouseEvent>(this.document, 'mousemove').pipe(
+      takeUntil(dragEnd$)
+    );
+
+    let initialWidth: number = 0;
+
+    let initialX: number;
+    let currentX = 0;
+
+    let dragSub: Subscription;
+
+    const dragStartSub = dragStart$.subscribe((event: MouseEvent) => {
+      if (!initialWidth) initialWidth = element.offsetWidth;
+
+      initialX = event.clientX - currentX;
+
+      dragSub = drag$.subscribe((event: MouseEvent) => {
+        event.preventDefault();
+
+        currentX = event.clientX - initialX;
+        element.style.width = initialWidth + currentX + 'px';
+      });
+    });
+
+    const dragEndSub = dragEnd$.subscribe(() => {
+      initialX = currentX;
+
+      if (dragSub) {
+        dragSub.unsubscribe();
+      }
+    });
+
+    this._subscription.add(dragStartSub);
+    this._subscription.add(dragEndSub);
   }
 }
